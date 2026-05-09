@@ -1,0 +1,10 @@
+Required Libaries
+
+random
+time
+coloroma
+rich
+
+Execute this command to install Libaries
+
+pip install random time coloroma rich
