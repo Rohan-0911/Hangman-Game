@@ -70,9 +70,10 @@ rules_list = [
     "2. You need to guess a single letter at a time.",
     "3. You have 6 lives total.",
     "4. You will lose 1 live for 1 incorrect guess.",
-    "5. Special characters and numbers are not allowed.",
-    "6. Have fun and try to beat your high score!",
-    "7. ALL THE BEST!"
+    "5. You can reveal one letter for 2 lives. You can use reveal only if you have more than 2 lives.",
+    "6. Special characters and numbers are not allowed.",
+    "7. Have fun and try to beat your high score!",
+    "8. ALL THE BEST!"
 ]
 
 # Valid input characters
@@ -139,7 +140,17 @@ def show_rules():
 
     print_separator_full()
 
-def display_secret_word(display):
+def select_word():
+    """
+    Selects the random word to be used in the game
+    """
+    #Get a random word
+    random_num = random.randrange(0, len(words))
+    random_word = words[random_num]
+    return random_word
+
+
+def display_secret_word(display : list[str]):
     """
     Display the characters guessed by player.
     """
@@ -159,18 +170,33 @@ def display_secret_word(display):
 
     console.print(layout)
 
+def get_hint(word : str, tot_lives : int, display : list[str]):
+    """
+    Reveals a letter as a hint
+    """
+    hidden_indices = []
+    for i in range(len(display)):
+        if display[i] == "_":
+            hidden_indices.append(i)
+
+    choice = random.choice(hidden_indices)
+    for i in range(len(word)):
+        if word[i] == word[choice]:
+            display[i] = word[i].upper()
+
+    console.print("\n")
+    display_secret_word(display)
+    lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
+    print(f"\nLives: {lives_display}")
+
 # Main Game
 
 def start():
     """
     The main game logic.
-    """
-    
-    #Get a random word
-    random_num = random.randrange(0, len(words))
-    
-    random_word = words[random_num]
-    
+    """    
+
+    random_word = select_word()
     # List to store attempts
     attempts = []
     wrong_attempts = [] 
@@ -179,14 +205,14 @@ def start():
     display = ["_"] * len(random_word)
     
     # Set lives
-    tot_lives = 6
+    tot_lives = 7
         
     #Header
     console.print(Panel(Align.center("\n[bold magenta]ULTIMATE HANGMAN[/]\n"), style="magenta", box = box.HEAVY))
 
     display_secret_word(display)
             
-    lives_display = "❤️ " * tot_lives + "💀 " * (6 - tot_lives)
+    lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
     print(f"\nLives: {lives_display}")
 
     print_separator_short()
@@ -211,7 +237,7 @@ def start():
 
             display_secret_word(display)
             
-            lives_display = "❤️ " * tot_lives + "💀 " * (6 - tot_lives)
+            lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
             print(f"\nLives: {lives_display}")
         
             print(f"Wrong Guesses: {', '.join(wrong_attempts)}")
@@ -226,7 +252,7 @@ def start():
 
             display_secret_word(display)
             
-            lives_display = "❤️ " * tot_lives + "💀 " * (6 - tot_lives)
+            lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
             print(f"\nLives: {lives_display}")
         
             print(f"Wrong Guesses: {', '.join(wrong_attempts)}")
@@ -254,23 +280,12 @@ def start():
 
             display_secret_word(display)
 
-            lives_display = "❤️ " * tot_lives + "💀 " * (6 - tot_lives)
+            lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
             print(f"\nLives: {lives_display}")
         
             print(f"Wrong Guesses: {', '.join(wrong_attempts)}")
 
             print_separator_short()
-            
-            # Check Win Condition
-            if "_" not in display:
-                print_separator_full()
-                
-                # Show Victory ASCII Art
-                console.print(Panel(Align.center(f"[bold green]{VICTORY_ART}[/]"), style="green"))
-                
-                console.print(Panel(Align.center(f"\n\nThe word was: [bold white]{random_word.upper()}[/]"), style="green"))
-                console.input("\n[bold green]Press Enter to return to menu...[/]")
-                break
 
         else:
             # Wrong Guess
@@ -284,7 +299,7 @@ def start():
 
             display_secret_word(display)
 
-            lives_display = "❤️ " * tot_lives + "💀 " * (6 - tot_lives)
+            lives_display = "❤️  " * tot_lives + "💀 " * (7 - tot_lives)
             print(f"\nLives: {lives_display}")
         
             print(f"Wrong Guesses: {', '.join(wrong_attempts)}")
@@ -293,8 +308,25 @@ def start():
                 pass
             
             else:
-                console.input("\n[italic]Press Enter to continue...[/]")
+                # Display hint option only if you have lives to spare
+                # Also reduces lives by 2 if hint used
+                if tot_lives>2:
+                    choice = console.input("\n[italic]Do you want to reveal a letter? Press y or n! [/]")
+                    if choice.casefold() == "y":
+                        tot_lives-=2
+                        get_hint(random_word, tot_lives, display)
                 print_separator_short()
+
+        # Check Win Condition
+        if "_" not in display:
+            print_separator_full()
+                        
+            # Show Victory ASCII Art
+            console.print(Panel(Align.center(f"[bold green]{VICTORY_ART}[/]"), style="green"))
+                        
+            console.print(Panel(Align.center(f"\n\nThe word was: [bold white]{random_word.upper()}[/]"), style="green"))
+            console.input("\n[bold green]Press Enter to return to menu...[/]")
+            break
 
     # Loss Condition Check
     if tot_lives == 0:
